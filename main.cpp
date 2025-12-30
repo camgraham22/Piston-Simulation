@@ -1,4 +1,5 @@
 #include "physics.cpp"
+#include <string.h>
 #include "./Includes/raylib-5.5_win64_mingw-w64/include/raylib.h"
 
 
@@ -10,12 +11,14 @@ int main() {
     int RPM = 100;
     bool combustionInProgress = false;
     Piston piston{ size, weight, distance, RPM };
-    float pistonTopDeadCenter = piston.getTopDeadCenter();
     float acceleration = 0.0f;
     Vector2 previousPistonPosition = piston.getPistonPosition();
     Vector2 previousCrankpinPosition = piston.getCrankpinPosition();
+    previousCrankpinPosition.x -= 5;
+    Vector2 crankshaftPosition = piston.getCrankshaftPosition();
+    bool combusting = false;
 
-    int targetFPS = 30;
+    int targetFPS = 144;
     InitWindow(1920, 1080, "Piston Simulation");
     SetTargetFPS(targetFPS);
 
@@ -23,34 +26,42 @@ int main() {
 
     while (!WindowShouldClose()) {
     
+        if (timePassed != 0) {
+            acceleration = 0;
+        }
         timePassed += GetFrameTime();
 
-        Vector2 pistonPostion = piston.getPistonPosition();
+        Vector2 pistonPosition = piston.getPistonPosition();
         Vector2 crankpinPostion = piston.getCrankpinPosition();
-        Vector2 conrodVector = {pistonPostion.x - crankpinPostion.x, pistonPostion.y - crankpinPostion.y};
+        Vector2 conrodVector = { pistonPosition.x - crankpinPostion.x, pistonPosition.y - crankpinPostion.y };
         float conrodLength = sqrt(conrodVector.x * conrodVector.x + conrodVector.y * conrodVector.y);
-        float conrodRotation = atan2(conrodVector.y, conrodVector.x);
-        piston.updatePosition(previousPistonPosition, previousCrankpinPosition, conrodVector, acceleration, conrodLength);
+        Vector2 crankTravel = { crankpinPostion.x - previousCrankpinPosition.x, crankpinPostion.y - previousCrankpinPosition.y };
+        float crankTravelLength = sqrt(crankTravel.x * crankTravel.x + crankTravel.y * crankTravel.y);
+        int RPM = 60 * (crankTravelLength / (2 * PI));
+        std::string rpmstr = std::to_string(RPM);
+        const char* rpmBuffer[10];
+        memcpy(rpmBuffer, &rpmstr, sizeof(rpmstr));
+        float conrodRotation;
+        piston.updatePosition(previousPistonPosition, previousCrankpinPosition, conrodVector, acceleration, conrodLength, conrodRotation);
+
         
-        previousPistonPosition = pistonPostion;
+        previousPistonPosition = pistonPosition;
         previousCrankpinPosition = crankpinPostion;
 
         BeginDrawing();
 
+        DrawText(*rpmBuffer, 0, 0, 20, BLACK);
+
         ClearBackground(WHITE);
-        if (pistonPostion.y == pistonTopDeadCenter || combustionInProgress) {
-            // cout << "\nKaboom!!";
-            combustionInProgress = true;
-            if (pistonPostion.y == pistonTopDeadCenter || (pistonPostion.y < pistonTopDeadCenter && pistonPostion.y > pistonTopDeadCenter - 100)) {
-                cout << "\nFIRE!!!!";
-                piston.combustion(10.800, acceleration);
-            }
-            else {
-                combustionInProgress = false;
-            }
+        if (crankpinPostion.y < crankshaftPosition.y - 48 && crankpinPostion.x > crankshaftPosition.x + 2) {
+            combusting = true;
+            piston.combustion(200000.0f, acceleration);
             timePassed = 0;
         }
-        piston.draw(timePassed, conrodLength, conrodRotation);
+        else {
+            combusting = false;
+        }
+        piston.draw(timePassed, conrodLength, conrodRotation, combusting);
 
         EndDrawing();
 

@@ -5,10 +5,10 @@
 
 class Piston {
     private:
-        Vector2 topDeadCenter;
         Vector2 pistonPosition;
         Vector2 velocity;
         Vector2 pistonSize;
+        Vector2 crankshaftPosition;
         Vector2 crankpinPosition;
         float realConrodLength;
         float pistonWeight;
@@ -17,12 +17,17 @@ class Piston {
     
     public:
         Piston(Vector2 size, float weight, float distance, int RPM);
-        void updatePosition(Vector2 pistonPosition, Vector2 crankpinPostion, Vector2 conrodVector, float &acceleration, float length);
+        void updatePosition(Vector2 pistonPosition, 
+            Vector2 crankpinPostion, 
+            Vector2 conrodVector, 
+            float &acceleration, 
+            float &length,
+            float &rotation);
         void combustion(float force, float &acceleration);
-        void draw(float time, float length, float rotation);
+        void draw(float time, float length, float rotation, bool combusting);
         Vector2 getPistonPosition();
         Vector2 getCrankpinPosition();
-        float getTopDeadCenter();
+        Vector2 getCrankshaftPosition();
 
 };
 
