@@ -6,62 +6,82 @@
 int main() {
 
     Vector2 size = { 100, 100 };
-    float weight = 1.32;
+    float weight = 10;
     float distance = 300;
-    int RPM = 100;
     bool combustionInProgress = false;
-    Piston piston{ size, weight, distance, RPM };
+    Piston piston{ size, weight, distance };
     float acceleration = 0.0f;
     Vector2 previousPistonPosition = piston.getPistonPosition();
     Vector2 previousCrankpinPosition = piston.getCrankpinPosition();
-    previousCrankpinPosition.x -= 5;
+    previousCrankpinPosition.x -= 1;
     Vector2 crankshaftPosition = piston.getCrankshaftPosition();
     bool combusting = false;
 
-    int targetFPS = 144;
+    int targetFPS = 60;
     InitWindow(1920, 1080, "Piston Simulation");
     SetTargetFPS(targetFPS);
 
     float timePassed = 0;
 
     while (!WindowShouldClose()) {
-    
-        if (timePassed != 0) {
-            acceleration = 0;
-        }
+
         timePassed += GetFrameTime();
 
         Vector2 pistonPosition = piston.getPistonPosition();
-        Vector2 crankpinPostion = piston.getCrankpinPosition();
-        Vector2 conrodVector = { pistonPosition.x - crankpinPostion.x, pistonPosition.y - crankpinPostion.y };
-        float conrodLength = sqrt(conrodVector.x * conrodVector.x + conrodVector.y * conrodVector.y);
-        Vector2 crankTravel = { crankpinPostion.x - previousCrankpinPosition.x, crankpinPostion.y - previousCrankpinPosition.y };
-        float crankTravelLength = sqrt(crankTravel.x * crankTravel.x + crankTravel.y * crankTravel.y);
-        int RPM = 60 * (crankTravelLength / (2 * PI));
-        std::string rpmstr = std::to_string(RPM);
-        const char* rpmBuffer[10];
-        memcpy(rpmBuffer, &rpmstr, sizeof(rpmstr));
-        float conrodRotation;
-        piston.updatePosition(previousPistonPosition, previousCrankpinPosition, conrodVector, acceleration, conrodLength, conrodRotation);
+        Vector2 crankpinPosition = piston.getCrankpinPosition();
 
-        
-        previousPistonPosition = pistonPosition;
-        previousCrankpinPosition = crankpinPostion;
+        Vector2 originalCrankpinPos = crankpinPosition;
+        float travelAngle = 0.0f;
+
+        for (int i = 0; i < 16; i++) {
+ 
+            pistonPosition = piston.getPistonPosition();
+            crankpinPosition = piston.getCrankpinPosition();
+
+            combusting = crankpinPosition.y < crankshaftPosition.y && crankpinPosition.x > crankshaftPosition.x + 1.5f;
+
+            if (combusting) {
+                float force = 100000.0f;
+                force *= ( 1 / (3 *  ((crankpinPosition.x - crankshaftPosition.x) / piston.crankpinRadius)));
+                // cout << '\n' << ( 1 / (10 *  ((crankpinPosition.x - crankshaftPosition.x) / piston.crankpinRadius)));
+                // cout << '\n' << ((crankpinPosition.x - crankshaftPosition.x) / piston.crankpinRadius);
+                // cout << '\n' << force;
+                piston.combustion(force, acceleration);
+            }
+            piston.updatePosition(previousPistonPosition, previousCrankpinPosition, acceleration);
+            acceleration = 0;
+
+            Vector2 relativeOld = { previousCrankpinPosition.x - crankshaftPosition.x, previousCrankpinPosition.y - crankshaftPosition.y };
+            Vector2 relativeNew = { crankpinPosition.x - crankshaftPosition.x, crankpinPosition.y - crankshaftPosition.y };
+            float lengthOld = sqrt(relativeOld.x * relativeOld.x + relativeOld.y * relativeOld.y);
+            float lengthNew = sqrt(relativeNew.x * relativeNew.x + relativeNew.y * relativeNew.y);
+            travelAngle += acosf((relativeOld.x * relativeNew.x + relativeOld.y * relativeNew.y) / ( 50 * 50 ));
+
+            previousPistonPosition = pistonPosition;
+            previousCrankpinPosition = crankpinPosition;
+        }
+
+        pistonPosition = piston.getPistonPosition();
+        crankpinPosition = piston.getCrankpinPosition();
+
+        // Vector2 relativeOld = { originalCrankpinPos.x - crankshaftPosition.x, originalCrankpinPos.y - crankshaftPosition.y };
+        // Vector2 relativeNew = { crankpinPosition.x - crankshaftPosition.x, crankpinPosition.y - crankshaftPosition.y };
+        // float lengthOld = sqrt(relativeOld.x * relativeOld.x + relativeOld.y * relativeOld.y);
+        // float lengthNew = sqrt(relativeNew.x * relativeNew.x + relativeNew.y * relativeNew.y);
+
+        // float travelAngle = acosf((relativeOld.x * relativeNew.x + relativeOld.y * relativeNew.y) / ( 50 * 50 ));
+        int RPM = (travelAngle / ( 2.0f * PI)) / (1.0f / 60.0f) * 60;
+        char rpmBuffer[7];
+        std::snprintf(rpmBuffer, sizeof(rpmBuffer), "%d", RPM);
 
         BeginDrawing();
 
-        DrawText(*rpmBuffer, 0, 0, 20, BLACK);
-
         ClearBackground(WHITE);
-        if (crankpinPostion.y < crankshaftPosition.y - 48 && crankpinPostion.x > crankshaftPosition.x + 2) {
-            combusting = true;
-            piston.combustion(200000.0f, acceleration);
-            timePassed = 0;
-        }
-        else {
-            combusting = false;
-        }
-        piston.draw(timePassed, conrodLength, conrodRotation, combusting);
+
+        DrawText(rpmBuffer, 0, 0, 20, BLACK);
+        DrawText(TextFormat("%d", RPM), 0, 0, 20, BLACK);   
+    
+        piston.draw(timePassed, combusting);
 
         EndDrawing();
 

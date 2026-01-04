@@ -6,25 +6,24 @@
 class Piston {
     private:
         Vector2 pistonPosition;
-        Vector2 velocity;
         Vector2 pistonSize;
         Vector2 crankshaftPosition;
         Vector2 crankpinPosition;
-        float realConrodLength;
+        float conrodLength;
+        float conrodRotation;
         float pistonWeight;
         float maxTravelDistance;
         int engineRPM;
     
     public:
-        Piston(Vector2 size, float weight, float distance, int RPM);
-        void updatePosition(Vector2 pistonPosition, 
-            Vector2 crankpinPostion, 
-            Vector2 conrodVector, 
-            float &acceleration, 
-            float &length,
-            float &rotation);
+        const float actualConrodLength = 200;
+        const int crankshaftRadius = 70;
+        const int crankpinRadius = 50;
+
+        Piston(Vector2 size, float weight, float distance);
+        void updatePosition(Vector2 pistonPosition, Vector2 crankpinPostion, float &acceleration);
         void combustion(float force, float &acceleration);
-        void draw(float time, float length, float rotation, bool combusting);
+        void draw(float time, bool combusting);
         Vector2 getPistonPosition();
         Vector2 getCrankpinPosition();
         Vector2 getCrankshaftPosition();
