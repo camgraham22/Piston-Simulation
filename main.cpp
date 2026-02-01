@@ -1,4 +1,5 @@
 #include "physics.cpp"
+#include "throttle.cpp"
 #include <string.h>
 #include "./Includes/raylib-5.5_win64_mingw-w64/include/raylib.h"
 
@@ -18,7 +19,14 @@ int main() {
     Vector2 crankshaftPosition = piston.getCrankshaftPosition();
     bool combusting = false;
 
-    int targetFPS = 144;
+    Vector2 throttleSliderPositon = { 300, 150 };
+    Vector2 throttleSliderSize = { 400, 5 };
+    Vector2 currentThrottlePosition = { throttleSliderPositon.x, throttleSliderPositon.y + throttleSliderSize.y / 2 };
+    float throttleSliderXBoundary = throttleSliderPositon.x + throttleSliderSize.x; 
+    float throttleSliderYBoundary = throttleSliderPositon.y + throttleSliderSize.y; 
+
+
+    int targetFPS = 1000;
     InitWindow(1920, 1080, "Piston Simulation");
     SetTargetFPS(targetFPS);
 
@@ -55,13 +63,17 @@ int main() {
         ClearBackground(WHITE);
         if (crankpinPostion.y < crankshaftPosition.y - 48 && crankpinPostion.x > crankshaftPosition.x + 2) {
             combusting = true;
-            piston.combustion(200000.0f, acceleration);
+            float force = 200000.0f * (1.0f - (( throttleSliderXBoundary - currentThrottlePosition.x ) / ( throttleSliderXBoundary - throttleSliderPositon.x )));
+            cout << "\n" << (1.0f - (( throttleSliderXBoundary - currentThrottlePosition.x ) / ( throttleSliderXBoundary - throttleSliderPositon.x )));
+            piston.combustion(force, acceleration);
             timePassed = 0;
         }
         else {
             combusting = false;
         }
-        piston.draw(timePassed, conrodLength, conrodRotation, combusting);
+        throttlePosition(currentThrottlePosition, throttleSliderPositon, throttleSliderSize);
+        float explosionRadius = 50.0f * (1.5f - (( throttleSliderXBoundary - currentThrottlePosition.x ) / ( throttleSliderXBoundary - throttleSliderPositon.x )));
+        piston.draw(timePassed, conrodLength, conrodRotation, combusting, explosionRadius);
 
         EndDrawing();
 

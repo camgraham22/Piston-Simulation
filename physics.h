@@ -13,7 +13,7 @@ class Piston {
         float realConrodLength;
         float pistonWeight;
         float maxTravelDistance;
-        int engineRPM;
+        float acceleration;
     
     public:
         Piston(Vector2 size, float weight, float distance, int RPM);
@@ -24,7 +24,7 @@ class Piston {
             float &length,
             float &rotation);
         void combustion(float force, float &acceleration);
-        void draw(float time, float length, float rotation, bool combusting);
+        void draw(float time, float length, float rotation, bool combusting, float radius);
         Vector2 getPistonPosition();
         Vector2 getCrankpinPosition();
         Vector2 getCrankshaftPosition();
