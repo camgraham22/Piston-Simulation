@@ -7,7 +7,7 @@
 int main() {
 
     Vector2 size = { 100, 100 };
-    float weight = 10;
+    float weight = 1;
     float distance = 300;
     bool combustionInProgress = false;
     Piston piston{ size, weight, distance };
@@ -49,7 +49,7 @@ int main() {
             combusting = crankpinPosition.y < crankshaftPosition.y && crankpinPosition.x > crankshaftPosition.x + 1.5f;
 
             if (combusting) {
-                float force = 100000.0f;
+                float force = 1000000.0f;
                 force *= ( 1 / (3 *  ((crankpinPosition.x - crankshaftPosition.x) / piston.crankpinRadius)));
                 piston.combustion(force, acceleration);
             }
@@ -79,7 +79,6 @@ int main() {
         if (crankpinPosition.y < crankshaftPosition.y - 48 && crankpinPosition.x > crankshaftPosition.x + 2) {
             combusting = true;
             float force = 200000.0f * (1.0f - (( throttleSliderXBoundary - currentThrottlePosition.x ) / ( throttleSliderXBoundary - throttleSliderPositon.x )));
-            cout << "\n" << (1.0f - (( throttleSliderXBoundary - currentThrottlePosition.x ) / ( throttleSliderXBoundary - throttleSliderPositon.x )));
             piston.combustion(force, acceleration);
             timePassed = 0;
         }
