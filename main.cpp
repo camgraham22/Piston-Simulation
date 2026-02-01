@@ -7,7 +7,7 @@
 int main() {
 
     Vector2 size = { 100, 100 };
-    float weight = 1;
+    float weight = 10;
     float distance = 300;
     bool combustionInProgress = false;
     Piston piston{ size, weight, distance };
@@ -49,7 +49,7 @@ int main() {
             combusting = crankpinPosition.y < crankshaftPosition.y && crankpinPosition.x > crankshaftPosition.x + 1.5f;
 
             if (combusting) {
-                float force = 1000000.0f;
+                float force = 100000000.0f * (1.0f - (( throttleSliderXBoundary - currentThrottlePosition.x ) / ( throttleSliderXBoundary - throttleSliderPositon.x )));;
                 force *= ( 1 / (3 *  ((crankpinPosition.x - crankshaftPosition.x) / piston.crankpinRadius)));
                 piston.combustion(force, acceleration);
             }
@@ -88,8 +88,8 @@ int main() {
         throttlePosition(currentThrottlePosition, throttleSliderPositon, throttleSliderSize);
         float explosionRadius = 50.0f * (1.5f - (( throttleSliderXBoundary - currentThrottlePosition.x ) / ( throttleSliderXBoundary - throttleSliderPositon.x )));
 
-        DrawText(rpmBuffer, 0, 0, 20, BLACK);
-        DrawText(TextFormat("%d", RPM), 0, 0, 20, BLACK);   
+        DrawText("RPM: ", 20, 20, 20, BLACK);
+        DrawText(rpmBuffer, 20, 60, 20, BLACK);   
     
         piston.draw(timePassed, combusting);
 
